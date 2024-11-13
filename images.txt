@@ -5,6 +5,7 @@ redis:alpine
 mysql:5.7
 node:20.15.1-alpine
 node:18-alpine
+nginx:stable-alpine
 
 
 # -------------------- registry.k8s.io -------------------------
