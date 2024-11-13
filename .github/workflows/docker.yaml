@@ -141,7 +141,7 @@ jobs:
             # 修改镜像标签，替换特殊字符
             new_image_tag=$(echo "$image_name_tag" | sed 's/\//-/g' | sed 's/:/-/g')
 
-            new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$ALIYUN_REGISTRY:$platform_prefix$name_space_prefix$new_image_tag"
+            new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/image-proxy:$platform_prefix$name_space_prefix$new_image_tag"
             echo "docker tag $image $new_image"
             docker tag $image $new_image
             echo "docker push $new_image"
