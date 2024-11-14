@@ -75,7 +75,7 @@ jobs:
           
               docker manifest inspect "$new_image" &>/dev/null
               if [ $? -eq 0 ]; then
-                echo "镜像 $new_image 已经存在，跳过拉取和推送操作"
+                echo "镜像 $image 已经存在，跳过拉取和推送操作"
               else
                 # 镜像不存在时，执行拉取、打标签和推送操作
                 echo "docker pull $image"
