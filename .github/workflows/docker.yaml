@@ -69,20 +69,8 @@ jobs:
               echo "docker pull $image";
               docker pull $image
 
-              # 获取镜像名:版本号 例如nginx:alpine
-              image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
-              echo "image_name_tag: $image_name_tag"
-          
-              # 获取命名空间和镜像名称
-              name_space=$(echo "$image" | awk -F'/' '{if (NF==3) print $2; else if (NF==2) print $1; else print ""}')
-              echo "name_space: $name_space"
-          
-              # 获取镜像名称（不含版本号）
-              image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
-              echo "image_name: $image_name"
-
               # 将冒号和斜杠替换为中划线
-              new_image_tag=$(echo "$image_name_tag" | sed 's/\//-/g' | sed 's/:/-/g')
+              new_image_tag=$(echo "$image_name" | sed 's/\//-/g' | sed 's/:/-/g')
 
               # 生成新的镜像地址
               new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/image-proxy:$new_image_tag"
