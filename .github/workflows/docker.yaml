@@ -51,6 +51,7 @@ jobs:
 
       - name: Build and push image to Aliyun
         run: |
+          set -x
           docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
 
           # 读取 images.txt 文件并处理每个镜像
@@ -77,7 +78,7 @@ jobs:
               if [ $? -eq 0 ]; then
                 echo "镜像 $image 已经存在，跳过拉取和推送操作"
               else
-                # 镜像不存在时，执行拉取、打标签和推送操作
+                echo "镜像不存在时，执行拉取、打标签和推送操作"
                 echo "docker pull $image"
                 docker pull $image
                 
