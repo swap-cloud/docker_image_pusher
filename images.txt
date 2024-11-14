@@ -7,7 +7,7 @@ node:20.15.1-alpine
 node:18-alpine
 nginx:stable-alpine
 likeshop/php:8.0.22-fpm
-easytier/easytier:latest
+easytier/easytier
 
 # -------------------- registry.k8s.io -------------------------
 registry.k8s.io/kube-apiserver:v1.30.2
