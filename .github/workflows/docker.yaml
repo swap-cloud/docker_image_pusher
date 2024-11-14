@@ -70,7 +70,7 @@ jobs:
               docker pull $image
 
               # 将冒号和斜杠替换为中划线
-              new_image_tag=$(echo "$image_name" | sed 's/\//-/g' | sed 's/:/-/g')
+              new_image_tag=$(echo "$image" | sed 's/\//-/g' | sed 's/:/-/g')
 
               # 生成新的镜像地址
               new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/image-proxy:$new_image_tag"
