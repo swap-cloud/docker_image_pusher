@@ -74,17 +74,37 @@ jobs:
               # 生成新的镜像地址
               new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/image-proxy:$new_image_tag"
           
-              docker manifest inspect "$new_image" &>/dev/null
-              if [ $? -eq 0 ]; then
+          
+              # 检查镜像地址是否包含仓库域名
+              if [[ "$new_image" != *"/"* ]]; then
+                # 如果没有仓库域名，默认使用 Docker 官方仓库域名 docker.io
+                new_image="docker.io/$new_image"
+              fi
+              
+              # 提取仓库域名、镜像名称和标签
+              registry=$(echo "$new_image" | cut -d'/' -f1)       # 获取仓库域名
+              repo_name=$(echo "$new_image" | cut -d'/' -f2-3 | cut -d':' -f1)  # 获取镜像仓库名
+              tag=$(echo "$new_image" | cut -d':' -f2)             # 获取镜像标签
+              
+              # 如果没有标签，则默认使用 'latest'
+              tag=${tag:-latest}
+              
+              # 构造请求的 URL
+              url="https://$registry/v2/$repo_name/manifests/$tag"
+              
+              # 使用 curl 请求镜像 manifest，-s 使 curl 静默工作，-o /dev/null 不输出内容，-w "%{http_code}" 获取 HTTP 响应码
+              response=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+              
+              if [ "$response" -eq 200 ]; then
                 echo "镜像 $image 已经存在，跳过拉取和推送操作"
               else
                 echo "镜像不存在时，执行拉取、打标签和推送操作"
                 echo "docker pull $image"
                 docker pull $image
-                
+          
                 echo "docker tag $image $new_image"
                 docker tag $image $new_image
-                
+          
                 echo "docker push $new_image"
                 docker push $new_image
                 echo "开始清理磁盘空间"
