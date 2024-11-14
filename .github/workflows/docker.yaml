@@ -66,19 +66,28 @@ jobs:
               # 将@sha256:等字符删除
               image="${image%%@*}"
               echo "image: $image"
-              echo "docker pull $image";
-              docker pull $image
-
+          
               # 将冒号和斜杠替换为中划线
               new_image_tag=$(echo "$image" | sed 's/\//-/g' | sed 's/:/-/g')
-
+          
               # 生成新的镜像地址
               new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/image-proxy:$new_image_tag"
-              echo "docker tag $image $new_image"
-              docker tag $image $new_image
-              echo "docker push $new_image"
-              docker push $new_image
-
+          
+              docker manifest inspect "$new_image" &>/dev/null
+              if [ $? -eq 0 ]; then
+                echo "镜像 $new_image 已经存在，跳过拉取和推送操作"
+              else
+                # 镜像不存在时，执行拉取、打标签和推送操作
+                echo "docker pull $image"
+                docker pull $image
+                
+                echo "docker tag $image $new_image"
+                docker tag $image $new_image
+                
+                echo "docker push $new_image"
+                docker push $new_image
+              fi
+          
               echo "开始清理磁盘空间"
               echo "=============================================================================="
               df -hT
