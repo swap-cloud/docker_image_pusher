@@ -66,6 +66,8 @@ jobs:
               # 将@sha256:等字符删除
               image="${image%%@*}"
               echo "image: $image"
+              echo "docker pull $image";
+              docker pull $image
 
               # 获取镜像名:版本号 例如nginx:alpine
               image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
