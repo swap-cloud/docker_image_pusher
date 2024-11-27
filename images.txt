@@ -1,13 +1,4 @@
-mysql:8.0
-redis:7.0.4
-dataelement/bisheng-backend:v0.3.7.dev1
-dataelement/bisheng-frontend:v0.3.7.dev1
-milvusdb/milvus:v2.3.3
-minio/minio:RELEASE.2023-03-20T20-16-18Z
-quay.io/coreos/etcd:v3.5.5
-docker.io/bitnami/elasticsearch:8.12.0
-onlyoffice/documentserver:7.1.1
-eosphorosai/dbgpt:latest
+php:7.1-fpm
 
 
 # ------------------- hub.docker.com ---------------------------
