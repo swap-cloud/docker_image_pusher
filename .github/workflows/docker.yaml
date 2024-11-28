@@ -53,45 +53,87 @@ jobs:
       - name: Build and push image to Aliyun
         run: |
               docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
-              
+              # 获取登录授权信息，获取 token
+              get_auth_token() {
+                  # 获取 token，使用 grep 和 sed 提取 token
+                  AUTH_TOKEN=$(curl --silent --location "https://dockerauth.cn-hangzhou.aliyuncs.com/auth?account=itxiao6%40qq.com&scope=repository%3Aswap-cloud%2Fimage-proxy%3Apush%2Cpull&service=registry.aliyuncs.com%3Acn-hangzhou%3A26842" \
+                      --header "Authorization: Basic $(echo -n "$ALIYUN_REGISTRY_USER:$ALIYUN_REGISTRY_PASSWORD" | base64)" \
+                      --header "Cookie: XSRF-TOKEN=ab34aa29-f93e-4bdf-b59d-3c0cb021012d" \
+                      | grep -o '"token":"[^"]*' | sed 's/"token":"//')
+
+                  if [ -z "$AUTH_TOKEN" ]; then
+                      echo "授权失败，无法获取 token。"
+                      exit 1
+                  fi
+                  echo "授权成功，获取 token: $AUTH_TOKEN"
+              }
+
+              # 检查仓库是否存在
+              check_repo_exists() {
+                  echo "检查镜像仓库是否存在 ..."
+                  local image_tag=$1
+                  status_code=$(curl --silent --location --head "https://${ALIYUN_REGISTRY}/v2/${ALIYUN_NAME_SPACE}/${ALIYUN_REGISTRY_NAME}/manifests/${image_tag}" \
+                      --header "Authorization: Bearer ${AUTH_TOKEN}" \
+                      --header "Accept: application/vnd.oci.image.index.v1+json" \
+                      | grep -i "HTTP/" | awk '{print $2}')
+
+                  if [ "$status_code" == "200" ]; then
+                      echo "镜像仓库已存在，跳过推送。"
+                      return 0  # 仓库已存在
+                  else
+                      return 1  # 仓库不存在
+                  fi
+              }
+
               # 读取 images.txt 文件并处理每个镜像
               while IFS= read -r line || [ -n "$line" ]; do
-                  # 忽略空行与注释
-                  [[ -z "$line" ]] && continue
-                  if echo "$line" | grep -q '^\s*#'; then
-                      continue
-                  fi
-              
-                  # 获取镜像的完整名称，例如
-                  image=$(echo "$line" | awk '{print $NF}')
-                  # 将@sha256:等字符删除
-                  image="${image%%@*}"
-              
-                  echo "image: $image"
-              
-                  # 将冒号和斜杠替换为中划线
-                  new_image_tag=$(echo "$image" | sed 's/\//-/g' | sed 's/:/-/g' | sed 's/\./-/g')
-              
-                  # 生成新的镜像地址
-                  new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$ALIYUN_REGISTRY_NAME:$new_image_tag"
-                  
-                  echo "docker pull $image"
-                  docker pull $image
-              
-                  echo "docker tag $image $new_image"
-                  docker tag $image $new_image
-              
-                  echo "docker push $new_image"
-                  docker push $new_image
-                  echo "开始清理磁盘空间"
-                  echo "=============================================================================="
-                  df -hT
-                  echo "=============================================================================="
-                  docker rmi $image
-                  docker rmi $new_image
-                  echo "磁盘空间清理完毕"
-                  echo "=============================================================================="
-                  df -hT
-                  echo "=============================================================================="     
-              
+                # 忽略空行与注释
+                [[ -z "$line" ]] && continue
+                if echo "$line" | grep -q '^\s*#'; then
+                    continue
+                fi
+
+                # 获取镜像的完整名称，例如
+                image=$(echo "$line" | awk '{print $NF}')
+                # 将@sha256:等字符删除
+                image="${image%%@*}"
+
+                echo "image: $image"
+
+                # 将冒号和斜杠替换为中划线
+                new_image_tag=$(echo "$image" | sed 's/\//-/g' | sed 's/:/-/g' | sed 's/\./-/g')
+
+                # 生成新的镜像地址
+                new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$ALIYUN_REGISTRY_NAME:$new_image_tag"
+                # 获取授权 token
+                if [ -z "$AUTH_TOKEN" ]; then
+                  get_auth_token
+                fi
+
+                # 判断仓库是否存在
+                check_repo_exists $new_image_tag
+                if [ $? -eq 0 ]; then
+                  echo "仓库已存在，跳过推送镜像。"
+                  continue
+                fi
+                
+                echo "docker pull $image"
+                docker pull $image
+
+                echo "docker tag $image $new_image"
+                docker tag $image $new_image
+
+                echo "docker push $new_image"
+                docker push $new_image
+                echo "开始清理磁盘空间"
+                echo "=============================================================================="
+                df -hT
+                echo "=============================================================================="
+                docker rmi $image
+                docker rmi $new_image
+                echo "磁盘空间清理完毕"
+                echo "=============================================================================="
+                df -hT
+                echo "=============================================================================="     
+
               done < ./images.txt
