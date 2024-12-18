@@ -76,7 +76,7 @@ jobs:
                       --header "Authorization: Bearer ${AUTH_TOKEN}" \
                       --header "Accept: application/vnd.oci.image.index.v1+json" \
                       | grep -i "HTTP/" | awk '{print $2}')
-
+                  echo "返回的 HTTP 状态码: $status_code"  # 输出 HTTP 状态码
                   if [ "$status_code" == "200" ]; then
                       echo "镜像仓库已存在，跳过推送。"
                       return 0  # 仓库已存在
