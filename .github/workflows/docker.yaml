@@ -81,6 +81,7 @@ jobs:
                       echo "镜像仓库已存在，跳过推送。"
                       return 0  # 仓库已存在
                   else
+                      echo "镜像仓库不存在或请求失败。"
                       return 1  # 仓库不存在
                   fi
               }
